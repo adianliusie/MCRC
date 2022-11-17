@@ -1,0 +1,4 @@
+trained_models
+temp
+data/*
+*.ipynb
