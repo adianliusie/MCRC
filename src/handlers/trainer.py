@@ -14,8 +14,7 @@ from .batcher import Batcher
 from ..data.handler import DataHandler
 from ..models.models import MC_transformer 
 from ..utils.general import save_json, load_json
-from ..loss.cross_entropy import CrossEntropyLoss
-
+from ..loss import get_loss
 
 # Create Logger
 logging.basicConfig(
@@ -23,7 +22,6 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S',
     level=logging.INFO)
 logger = logging.getLogger(__name__)
-
 
 class Trainer(object):
     """ Base class for finetuning transformer to datasets """
@@ -33,7 +31,7 @@ class Trainer(object):
 
     def setup_helpers(self, args: namedtuple):
         self.model_args = args
-        self.data_handler = DataHandler(trans_name=args.transformer)
+        self.data_handler = DataHandler(trans_name=args.transformer, formatting=args.formatting)
         self.batcher = Batcher(max_len=args.maxlen)
         self.model = MC_transformer(trans_name=args.transformer)
 
@@ -51,7 +49,12 @@ class Trainer(object):
         self.to(args.device)
         self.model.train()
         self.log_num_params()
-        self.model_loss = CrossEntropyLoss(self.model)
+        self.model_loss = get_loss(args.loss, self.model, args)
+        
+        # change batcher and dataloader mode for knowledge debias
+        if args.loss == 'knowledge-debias': 
+            self.batcher.knowledge_debias()
+            self.data_handler.knowledge_debias = True
 
         # Reset loss metrics
         self.best_dev = (0, {})
@@ -73,8 +76,11 @@ class Trainer(object):
             for step, batch in enumerate(train_batches, start = 1):
                 output = self.model_loss(batch)
 
+                # update graidents, clip gradients, and update parameters
                 optimizer.zero_grad()
                 output.loss.backward()
+                if args.grad_clip: 
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), args.grad_clip)
                 optimizer.step()
         
                 # Print train performance every log_every samples
@@ -96,7 +102,7 @@ class Trainer(object):
             self.log_metrics(metrics = metrics, mode = 'dev')
             if args.wandb: self.log_wandb(metrics, mode = 'dev')
 
-            if metrics['loss'] < self.best_dev[1].get('loss', float('inf')):
+            if metrics['acc'] > self.best_dev[1].get('acc', 0):
                 self.best_dev = (epoch, metrics.copy())
                 self.save_model()
             
@@ -180,6 +186,7 @@ class Trainer(object):
     def setup_exp(self, exp_path: str, args: namedtuple):
         self.exp_path = exp_path
 
+        # prepare experiment directory structure
         if not os.path.isdir(self.exp_path):
             os.makedirs(self.exp_path)
         
@@ -191,6 +198,14 @@ class Trainer(object):
         if not os.path.isdir(eval_path):
             os.makedirs(eval_path)
 
+        # add file Handler to logging
+        fh = logging.FileHandler(os.path.join(exp_path, 'train.log'))
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+        fh.setFormatter(formatter)
+        fh.setLevel(logging.INFO)
+        logger.addHandler(fh)
+
+        # save model arguments
         self.save_args('model_args.json', args)
 
     def to(self, device):

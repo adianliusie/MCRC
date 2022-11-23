@@ -14,11 +14,12 @@ class DataHandler:
     def __init__(self, trans_name:str, formatting:str='QOC'):
         self.tokenizer = load_tokenizer(trans_name)
         self.formatting = formatting
-        
+        self.knowledge_debias = False
+
     #== MCRC Data processing (i.e. tokenizing text) ===============================================#
     def prep_split(self, data_name:str, mode:str, lim=None):
         data = self.load_split(data_name, mode, lim)
-        return self._prep_MCRC_ids(data)
+        return self._prep_ids(data)
     
     def prep_data(self, data_name, lim=None):
         train, dev, test = self.load_data(data_name=data_name, lim=lim)
@@ -31,17 +32,23 @@ class DataHandler:
             Q_ids   = self.tokenizer(ex.question).input_ids
             C_ids   = self.tokenizer(ex.context).input_ids
             options = [self.tokenizer(option).input_ids for option in ex.options]
-            ex.input_ids = self._prep_inputs(Q_ids, C_ids, options)
+
+            if self.knowledge_debias:
+                ex.QOC_ids = self._prep_inputs(Q_ids, C_ids, options, 'QOC')
+                ex.QO_ids = self._prep_inputs(Q_ids, C_ids, options, 'QO')
+            else:
+                ex.input_ids = self._prep_inputs(Q_ids, C_ids, options, self.formatting)
+
         return split_data
             
-    def _prep_inputs(self, Q_ids:List[int], C_ids:List[int], options:List[List[int]]):
-        if self.formatting == 'QOC':
+    def _prep_inputs(self, Q_ids:List[int], C_ids:List[int], options:List[List[int]], formatting):
+        if formatting == 'QOC':
             ids = [C_ids + Q_ids[1:-1] + O_ids[1:] for O_ids in options]
-        elif self.formatting == 'O':
+        elif formatting == 'O':
             ids = [O_ids for O_ids in options]
-        elif self.formatting == 'QO':
+        elif formatting == 'QO':
             ids = [Q_ids[:-1] + O_ids[1:] for O_ids in options]
-        elif self.formatting == 'CO':
+        elif formatting == 'CO':
             ids = [C_ids + O_ids[1:] for O_ids in options]
         return ids
     

@@ -23,13 +23,14 @@ class CrossEntropyLoss(BaseLoss):
         loss = output.loss
 
         # Masking out all non-labels
-        hits = torch.argmax(output.logits, dim=-1) == batch.labels
+        hits = torch.argmax(logits, dim=-1) == batch.labels
         acc = hits.sum()/len(batch.labels)
 
         #record training metrics
         self.record_metrics({
             'loss': loss.item(),
-            'acc':  acc.item(),
+            'acc': acc.item(),
+            'ce': loss.item()
         })
 
         return SimpleNamespace(

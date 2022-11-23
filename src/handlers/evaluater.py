@@ -26,20 +26,21 @@ class Evaluator(Trainer):
         self.model_loss = CrossEntropyLoss(self.model)
 
     #== Model Prediction Methods ==================================================================#
-    def load_preds(self, dataset:str, mode:str)->dict:
-        probs = self.load_probs(dataset, mode)
+    def load_preds(self, dataset:str, mode:str, formatting:str=None)->dict:
+        probs = self.load_probs(dataset, mode, formatting)
         preds = {}
         for ex_id, probs in probs.items():
             preds[ex_id] = int(np.argmax(probs, axis=-1))  
         return preds
         
-    def load_probs(self, dataset:str, mode:str, calibrate=False)->dict:
+    def load_probs(self, dataset:str, mode:str, formatting=None, calibrate=False)->dict:
         """ loads cached probabilities, if not cached then generate """
-        if not self.probs_exist(dataset, mode):
+        if not self.probs_exist(dataset, mode, formatting):
             self.setup_helpers()
+            if formatting: self.data_handler.formatting = formatting
             probs = self.generate_probs(dataset, mode)
-            self.cache_probs(probs, dataset, mode)
-        probs = self.load_cached_probs(dataset, mode)
+            self.cache_probs(probs, dataset, mode, formatting)
+        probs = self.load_cached_probs(dataset, mode, formatting)
         return probs
 
     @torch.no_grad()
@@ -66,23 +67,27 @@ class Evaluator(Trainer):
         return probs
 
     #== loading and saving functions ==============================================================#
-    def cache_probs(self, probs, dataset:str, mode:str):
-        eval_name = f'{dataset}_{mode}'
+    def get_eval_path(self, dataset:str, mode:str, formatting:str=None):
+        if formatting is None: 
+            args = self.load_args('model_args.json')
+            formatting = args.formatting
+        eval_name = f'{dataset}_{mode}_{formatting}'
         pred_path = os.path.join(self.exp_path, 'eval', f'{eval_name}.pk')
-        print(pred_path)
+        return pred_path
+    
+    def cache_probs(self, probs, dataset:str, mode:str, formatting:str=None):
+        pred_path = self.get_eval_path(dataset, mode, formatting)
         with open(pred_path, 'wb') as handle:
             pickle.dump(probs, handle)
     
-    def load_cached_probs(self, dataset:str, mode:str):
-        eval_name = f'{dataset}_{mode}'
-        pred_path = os.path.join(self.exp_path, 'eval', f'{eval_name}.pk')
+    def load_cached_probs(self, dataset:str, mode:str, formatting:str=None):
+        pred_path = self.get_eval_path(dataset, mode, formatting)
         with open(pred_path, 'rb') as handle:
             probs = pickle.load(handle)
         return probs
     
-    def probs_exist(self, dataset:str, mode:str):
-        eval_name = f'{dataset}_{mode}'
-        pred_path = os.path.join(self.exp_path, 'eval', f'{eval_name}.pk')
+    def probs_exist(self, dataset:str, mode:str, formatting:str):
+        pred_path = self.get_eval_path(dataset, mode, formatting)
         return os.path.isfile(pred_path)
 
     #== general eval methods ======================================================================#

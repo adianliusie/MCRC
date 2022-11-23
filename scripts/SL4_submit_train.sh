@@ -37,7 +37,7 @@
 #SBATCH --no-requeue
 
 #! Do not change:
-#SBATCH -p pascal
+#SBATCH -p ampere
 
 #! sbatch directives end here (put any additional directives above this line)
 

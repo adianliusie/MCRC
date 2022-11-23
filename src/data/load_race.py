@@ -39,7 +39,7 @@ def format_race(data, char):
                                  question=question, 
                                  context=context, 
                                  options=options, 
-                                 answer=answer)
+                                 label=answer)
         outputs.append(ex_obj)
     return outputs
 

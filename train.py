@@ -24,17 +24,20 @@ if __name__ == '__main__':
 
     ### Training arguments
     train_parser = argparse.ArgumentParser(description='Arguments for training the system')
+    train_parser.add_argument('--loss', default='cross-entropy', type=str, help='which loss function to use to train the system')
     train_parser.add_argument('--dataset', default='race++', type=str, help='dataset to train the system on')
     train_parser.add_argument('--lim', default=None, type=int, help='size of data subset to use for debugging')
     
-    train_parser.add_argument('--epochs', default=10, type=int, help='size of data subset to use for debugging')
+    train_parser.add_argument('--epochs', default=5, type=int, help='size of data subset to use for debugging')
     train_parser.add_argument('--bsz', default=4, type=int, help='size of data subset to use for debugging')
     train_parser.add_argument('--lr', default=2e-6, type=float, help='learning rate')
+    train_parser.add_argument('--grad-clip', default=1, type=float, help='gradient clipping')
 
     train_parser.add_argument('--log-every', default=1200, type=int, help='logging training metrics every number of examples')
     train_parser.add_argument('--wandb', action='store_true', help='if set, will log to wandb')
     train_parser.add_argument('--device', default='cuda', type=str, help='selecting device to use')
-
+    train_parser.add_argument('--entropy-alpha', default=1, type=float, help='weighting of entropy for knowledge debiasing')
+    
     # Parse system input arguments
     model_args, moargs = model_parser.parse_known_args()
     train_args, toargs = train_parser.parse_known_args()

@@ -24,15 +24,15 @@ class Batcher():
         prepped_examples = []
         for ex in data:
             ex_id = ex.ex_id
-            label = ex.answer
+            label = ex.label
             input_ids = ex.input_ids
             
             # if ids larger than max size, then truncate
-            max_opt_len = max([len(opt_ids) for opt_ids in ex.input_ids])
-            if self.max_len and (max_opt_len>self.max_len): 
-                input_ids = [[opt_ids[0]] + opt_ids[-self.max_len+1:] for opt_ids in ex.input_ids]
-            
+            for k, opt in enumerate(input_ids):
+                if self.max_len and (len(opt) > self.max_len): 
+                    input_ids[k] = [opt[0]] + opt[-self.max_len+1:]
             prepped_examples.append([ex_id, input_ids, label])
+
         return prepped_examples
 
     def batchify(self, batch:List[list]):
@@ -71,4 +71,38 @@ class Batcher():
         """routes the main method do the batches function"""
         return self.batches(data=data, bsz=bsz, shuffle=shuffle)
 
-    
+    #== Converting the Batcher ====================================================================#
+    def knowledge_debias(self):
+        self.__class__ = DebiasBatcher
+
+class DebiasBatcher(Batcher):
+    def _prep_examples(self, data:list):
+        """ sequence classification input data preparation"""
+        prepped_examples = []
+        for ex in data:
+            ex_id = ex.ex_id
+            label = ex.label
+            QOC_ids = ex.QOC_ids
+            QO_ids  = ex.QO_ids
+
+            # if ids larger than max size, then truncate
+            max_QOC_len = max([len(opt_ids) for opt_ids in QOC_ids])
+            if self.max_len and (max_QOC_len > self.max_len): 
+                QOC_ids = [[opt_ids[0]] + opt_ids[-self.max_len+1:] for opt_ids in QOC_ids]
+            
+            prepped_examples.append([ex_id, QOC_ids, QO_ids, label])
+        return prepped_examples
+ 
+    def batchify(self, batch:List[list]):
+        """each input is input ids and mask for utt, + label"""
+        ex_id, QOC_ids, QO_ids, labels = zip(*batch)  
+        QOC_ids, QOC_mask = self._get_3D_padded_ids(QOC_ids)
+        QO_ids, QO_mask = self._get_3D_padded_ids(QO_ids)
+
+        labels = torch.LongTensor(labels).to(self.device)
+        return SimpleNamespace(ex_id=ex_id, 
+                               QOC_ids=QOC_ids, 
+                               QOC_mask=QOC_mask,
+                               QO_ids=QO_ids,
+                               QO_mask=QO_mask,
+                               labels=labels)

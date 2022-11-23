@@ -60,10 +60,10 @@ module purge                               # Removes all modules still loaded
 module load rhel8/default-amp              # REQUIRED - loads the basic environment
 
 #! Insert additional module load commands after this line if needed:
-module load python/3.8 cuda/10.0 cudnn/7.5_cuda-10.0
+# module load python/3.8 cuda/10.0 cudnn/7.5_cuda-10.0
 
 #! Full path to application executable: 
-application="/home/al826/rds/hpc-work/2022/QA/scripts/train.sh"
+application="train.sh"
 
 #! Work directory (i.e. where the job will run):
 workdir="$SLURM_SUBMIT_DIR"  # The value of SLURM_SUBMIT_DIR sets workdir to the directory
