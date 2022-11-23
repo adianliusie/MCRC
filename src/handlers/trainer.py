@@ -15,6 +15,7 @@ from ..data.handler import DataHandler
 from ..models.models import MC_transformer 
 from ..utils.general import save_json, load_json
 from ..loss import get_loss
+from ..utils.torch import set_rand_seed
 
 # Create Logger
 logging.basicConfig(
@@ -30,6 +31,12 @@ class Trainer(object):
         self.setup_helpers(args)
 
     def setup_helpers(self, args: namedtuple):
+        # set random seed
+        if (args.rand_seed is None) and ('/seed-' in self.exp_path):
+            args.rand_seed = int(self.exp_path.split('/seed-')[-1])
+        set_rand_seed(args.rand_seed)
+
+        # set up attributes 
         self.model_args = args
         self.data_handler = DataHandler(trans_name=args.transformer, formatting=args.formatting)
         self.batcher = Batcher(max_len=args.maxlen)
@@ -222,8 +229,8 @@ class Trainer(object):
 
         #init wandb project
         wandb.init(
-            project=f"MCRC-{args.dataset}",
-            entity='adian',
+            project=f"QA-{args.dataset}",
+            entity='mg-speech-group',
             group=group_name,
             name=exp_name, 
             dir=self.exp_path,

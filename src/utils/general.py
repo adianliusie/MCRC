@@ -4,7 +4,7 @@ import os
 
 from pathlib import Path
 
-#== File handling functions ================================================
+#== File handling functions =======================================================================#
 def save_json(data:dict, path:str):
     with open(path, "w") as outfile:
         json.dump(data, outfile, indent=2)
@@ -23,7 +23,7 @@ def load_pickle(path:str):
         data = pickle.load(pkl_file)
     return data
 
-#== Location utils ==========================================================
+#== Location utils ================================================================================#
 def _join_paths(base_path:str, relative_path:str):
     path = os.path.join(base_path, relative_path)
     path = str(Path(path).resolve()) #convert base/x/x/../../src to base/src

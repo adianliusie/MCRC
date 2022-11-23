@@ -10,8 +10,8 @@ RACE_C_REPO = 'https://github.com/mrcdata/race-c/raw/master/data.zip'
 def download_race_plus_plus():
     """ automatically downloads the classification CAD datasets in parent data folder"""
     os.system(f"mkdir -p {RACE_C_DIR}")
-    os.system(f"wget {RACE_C_REPO}")
-    os.system(f"unzip data.zip -d {RACE_C_DIR}")
+    os.system(f"wget -O RACE-C.zip {RACE_C_REPO}")
+    os.system(f"unzip RACE-C.zip -d {RACE_C_DIR}")
     os.system(f"mv {RACE_C_DIR}/data/* {RACE_C_DIR}")
     os.system(f"rmdir {RACE_C_DIR}/data")
-    os.system(f"rm data.zip")
+    os.system(f"rm RACE-C.zip")
