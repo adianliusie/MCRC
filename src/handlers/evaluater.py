@@ -15,7 +15,7 @@ class Evaluator(Trainer):
     """ Evaluator class- inherits Trainer so has all experiment methods
         class takes care of evaluation and automatic caching of results"""
 
-    def __init__(self, path, device):
+    def __init__(self, path, device='cuda'):
         self.exp_path = path
         self.device = device
 
@@ -26,14 +26,14 @@ class Evaluator(Trainer):
         self.model_loss = CrossEntropyLoss(self.model)
 
     #== Model Prediction Methods ==================================================================#
-    def load_preds(self, dataset:str, mode:str, formatting:str=None)->dict:
+    def load_preds(self, dataset:str, mode:str='test', formatting:str=None)->dict:
         probs = self.load_probs(dataset, mode, formatting)
         preds = {}
         for ex_id, probs in probs.items():
             preds[ex_id] = int(np.argmax(probs, axis=-1))  
         return preds
         
-    def load_probs(self, dataset:str, mode:str, formatting=None, calibrate=False)->dict:
+    def load_probs(self, dataset:str, mode:str='test', formatting=None, calibrate=False)->dict:
         """ loads cached probabilities, if not cached then generate """
         if not self.probs_exist(dataset, mode, formatting):
             self.setup_helpers()
@@ -98,6 +98,14 @@ class Evaluator(Trainer):
         for ex in eval_data:
             labels_dict[ex.ex_id] = ex.label
         return labels_dict
+
+    @staticmethod
+    def load_split(dataset:str, mode:str='test', lim=None)->dict:
+        eval_data = DataHandler.load_split(dataset, mode)
+        output_dict = {}
+        for ex in eval_data:
+            output_dict[ex.ex_id] = ex
+        return output_dict
 
     @staticmethod
     def calc_acc(preds, labels):

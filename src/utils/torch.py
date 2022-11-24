@@ -5,7 +5,6 @@ import numpy as np
 #== Reproducibility ===============================================================================#
 def set_rand_seed(seed_num=None):
     if seed_num:
-        print('setting seed ', seed_num)
         random.seed(seed_num)
         torch.manual_seed(seed_num)
         np.random.seed(seed_num)

@@ -14,8 +14,8 @@ from .batcher import Batcher
 from ..data.handler import DataHandler
 from ..models.models import MC_transformer 
 from ..utils.general import save_json, load_json
-from ..loss import get_loss
 from ..utils.torch import set_rand_seed
+from ..loss import get_loss
 
 # Create Logger
 logging.basicConfig(
