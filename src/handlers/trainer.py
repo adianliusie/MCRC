@@ -32,9 +32,11 @@ class Trainer(object):
 
     def setup_helpers(self, args: namedtuple):
         # set random seed
-        if (args.rand_seed is None) and ('/seed-' in self.exp_path):
-            args.rand_seed = int(self.exp_path.split('/seed-')[-1])
-        set_rand_seed(args.rand_seed)
+        if hasattr(args, 'rand_seed'):
+            if (args.rand_seed is None) and ('/seed-' in self.exp_path):
+                rand_seed = self.exp_path.split('/seed-')
+                args.rand_seed = int(rand_seed[-1].replace('/', ''))
+            set_rand_seed(args.rand_seed)
 
         # set up attributes 
         self.model_args = args

@@ -32,7 +32,7 @@ if __name__ == '__main__':
     train_parser.add_argument('--epochs', default=3, type=int, help='size of data subset to use for debugging')
     train_parser.add_argument('--bsz', default=4, type=int, help='size of data subset to use for debugging')
     train_parser.add_argument('--lr', default=2e-6, type=float, help='learning rate')
-    train_parser.add_argument('--grad-clip', default=1, type=float, help='gradient clipping')
+    train_parser.add_argument('--grad-clip', default=0.2, type=float, help='gradient clipping')
 
     train_parser.add_argument('--log-every', default=1200, type=int, help='logging training metrics every number of examples')
     train_parser.add_argument('--wandb', action='store_true', help='if set, will log to wandb')

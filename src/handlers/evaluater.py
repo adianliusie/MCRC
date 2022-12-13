@@ -10,6 +10,7 @@ import torch.nn.functional as F
 from .trainer import Trainer
 from ..data.handler import DataHandler
 from ..loss.cross_entropy import CrossEntropyLoss
+from ..utils.analysis import anneal_probs
 
 class Evaluator(Trainer):
     """ Evaluator class- inherits Trainer so has all experiment methods
@@ -41,6 +42,10 @@ class Evaluator(Trainer):
             probs = self.generate_probs(dataset, mode)
             self.cache_probs(probs, dataset, mode, formatting)
         probs = self.load_cached_probs(dataset, mode, formatting)
+
+        if calibrate:
+            labels = self.load_labels(dataset, mode)
+            probs = anneal_probs(probs, labels)
         return probs
 
     @torch.no_grad()

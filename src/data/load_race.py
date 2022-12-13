@@ -1,5 +1,4 @@
 import os
-import pickle
 
 from datasets import load_dataset
 from types import SimpleNamespace

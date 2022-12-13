@@ -8,6 +8,8 @@ from functools import lru_cache
 
 from ..models.tokenizers import load_tokenizer
 from .load_race import load_race
+from .misc import load_random_context_race, load_random_context_reclor
+from .load_reclor import load_reclor
 
 #== Main DataHandler class ========================================================================#
 class DataHandler:
@@ -17,10 +19,12 @@ class DataHandler:
         self.knowledge_debias = False
 
     #== MCRC Data processing (i.e. tokenizing text) ===============================================#
+    @lru_cache(maxsize=5)
     def prep_split(self, data_name:str, mode:str, lim=None):
         data = self.load_split(data_name, mode, lim)
         return self._prep_ids(data)
     
+    @lru_cache(maxsize=5)
     def prep_data(self, data_name, lim=None):
         train, dev, test = self.load_data(data_name=data_name, lim=lim)
         train, dev, test = [self._prep_ids(split) for split in [train, dev, test]]
@@ -64,8 +68,13 @@ class DataHandler:
     def load_data(cls, data_name:str, lim=None):
         if   data_name == 'race++': train, dev, test = load_race(levels=['M', 'H', 'C'])
         elif data_name == 'race':   train, dev, test = load_race(levels=['M', 'H'])
-        elif data_name == 'reclor': train, dev, test = None, None, None #load_reclor()
+        elif data_name == 'race-M': train, dev, test = load_race(levels=['M'])
+        elif data_name == 'race-H': train, dev, test = load_race(levels=['H'])
+        elif data_name == 'race-C': train, dev, test = load_race(levels=['C'])
+        elif data_name == 'reclor': train, dev, test = load_reclor()
         elif data_name == 'cosmos': train, dev, test = None, None, None #load_cosmos()
+        elif data_name == 'race-ctx-rand': train, dev, test = load_random_context_race(levels=['M', 'H', 'C'])
+        elif data_name == 'reclor-ctx-rand': train, dev, test = load_random_context_reclor()
         else: raise ValueError(f"{data_name}: invalid dataset name") 
         if lim:
             train = rand_select(train, lim)
