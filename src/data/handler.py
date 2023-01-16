@@ -8,6 +8,7 @@ from functools import lru_cache
 
 from ..models.tokenizers import load_tokenizer
 from .load_race import load_race
+from .load_cosmos import load_cosmos
 from .misc import load_random_context_race, load_random_context_reclor
 from .load_reclor import load_reclor
 
@@ -72,7 +73,7 @@ class DataHandler:
         elif data_name == 'race-H': train, dev, test = load_race(levels=['H'])
         elif data_name == 'race-C': train, dev, test = load_race(levels=['C'])
         elif data_name == 'reclor': train, dev, test = load_reclor()
-        elif data_name == 'cosmos': train, dev, test = None, None, None #load_cosmos()
+        elif data_name == 'cosmos': train, dev, test = load_cosmos()
         elif data_name == 'race-ctx-rand': train, dev, test = load_random_context_race(levels=['M', 'H', 'C'])
         elif data_name == 'reclor-ctx-rand': train, dev, test = load_random_context_reclor()
         else: raise ValueError(f"{data_name}: invalid dataset name") 
